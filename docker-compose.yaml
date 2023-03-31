@@ -1,0 +1,83 @@
+version: "3"
+
+services:
+  boli_mongodb:
+    container_name: "boli_mongodb"
+    platform: linux/amd64
+    image: mongo:4.4.14
+    ports:
+      - "27020:27017"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+    networks:
+      - backend
+
+  boli_user_service:
+    container_name: "boli_user_service"
+    build: ./user_service
+    command: npm start
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/usr/app/user_service
+      - ./user_service/public:/user_service/public
+    links:
+      - boli_mongodb
+    depends_on:
+      - "boli_mongodb"
+    networks:
+      - backend   
+    restart: always 
+
+  boli_auction_service:
+    container_name: "boli_auction_service"
+    build: ./auction_service
+    command: npm start
+    ports:
+      - "5002:5002"
+    volumes:
+      - .:/usr/app/auction_service
+      - ./auction_service/public:/auction_service/public
+    links:
+      - boli_mongodb
+    depends_on:
+      - "boli_mongodb"
+    networks:
+      - backend   
+    restart: always 
+
+  boli_packages_service:
+    container_name: "boli_packages_service"
+    build: ./packages_service
+    command: npm start
+    ports:
+      - "5003:5003"
+    volumes:
+      - .:/usr/app/packages_service
+      - ./packages_service/public:/packages_service/public
+    links:
+      - boli_mongodb
+    depends_on:
+      - "boli_mongodb"
+    networks:
+      - backend   
+    restart: always 
+
+
+  # app:
+  #   image: 'jc21/nginx-proxy-manager:latest'
+  #   restart: unless-stopped #Ensure proxy manager survives crashes
+  #   ports:
+  #     #Allow the respective container ports to be accessible from the host machine
+  #     - '80:80'
+  #     - '81:81' #Port for the Admin Panel
+  #     - '443:443'
+  #   volumes:
+  #     #Map the following container directories to corresponding directories on the host
+  #       - ./data:/data
+  #       - ./letsencrypt:/etc/letsencrypt
+
+networks:
+  backend:
+    driver: bridge
